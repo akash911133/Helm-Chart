@@ -61,10 +61,9 @@ jobs:
 
             # Compare versions
             if dpkg --compare-versions "$version" lt "$latest_version"; then
-              echo "Version update needed for $chart_name. Current version: $version, Latest version: $latest_version"
+              echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
               # You can add further actions here if an update is needed
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
-          
