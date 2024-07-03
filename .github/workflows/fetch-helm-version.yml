@@ -28,7 +28,7 @@ jobs:
       - name: List files for debugging
         run: |
           ls -la
-          cat akash.yml
+          cat akash.json
 
       - name: Install jq
         run: |
@@ -37,8 +37,8 @@ jobs:
 
       - name: Add Helm repo and check versions
         run: |
-          # Read the list of charts from akash.yml
-          charts=$(jq -c '.charts[]' akash.yml)
+          # Read the list of charts from akash.json
+          charts=$(jq -c '.charts[]' akash.json)
 
           # Iterate over each chart
           echo "$charts" | while IFS= read -r chart; do
