@@ -24,6 +24,9 @@ jobs:
           wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           mv linux-amd64/helm /usr/local/bin/helm
+          
+      - name: List files for debugging
+        run: ls -la
 
       - name: Install jq
         run: |
