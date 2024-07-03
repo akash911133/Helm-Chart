@@ -4,10 +4,10 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - master # Adjust to the branch you want to trigger this on
+      - main # Adjust to the branch you want to trigger this on
   pull_request:
     branches:
-      - master  # Adjust to the branch you want to trigger this on
+      - main  # Adjust to the branch you want to trigger this on
 
 jobs:
   helm-check:
