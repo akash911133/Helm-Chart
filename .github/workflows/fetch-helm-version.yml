@@ -1,4 +1,3 @@
-
 name: Helm Chart Update Check
 
 on:
@@ -38,7 +37,8 @@ jobs:
 
       - name: Update Terraform Variables
         run: |
-          python3 ./scripts/update_tf_variables.py  # Adjust the path as needed
+          ls -la  # Verify the current directory structure
+          python3 ./Terraform/update_tf_variables.py  # Adjust the path as needed
 
       - name: Add Helm repo and check versions
         run: |
