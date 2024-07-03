@@ -3,10 +3,10 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - main  # Adjust to the branch you want to trigger this on
+      - Test  # Adjust to the branch you want to trigger this on
   pull_request:
     branches:
-      - main  # Adjust to the branch you want to trigger this on
+      - Test  # Adjust to the branch you want to trigger this on
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
@@ -34,6 +34,10 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install jq -y
+
+      - name: Update Terraform Variables
+        run: |
+          python3 ./scripts/update_tf_variables.py
 
       - name: Add Helm repo and check versions
         run: |
@@ -67,3 +71,4 @@ jobs:
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
+
