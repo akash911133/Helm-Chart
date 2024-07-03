@@ -12,14 +12,15 @@ def update_input_tf(akash_file, input_tf_file):
     # Update variables in input.tf
     updated_lines = []
     for line in input_tf_data:
-        for chart in akash_data['charts']:
-            chart_name = chart['chart']
-            version = chart['version']
-            if f'variable "{chart_name}"' in line:
-                # Update the default version
-                updated_line = f' default = "{version}"\n'
-                line = line.replace(line.split('=')[1].strip(), updated_line.strip())
-                break
+        if line.strip().startswith('variable'):
+            variable_name = line.split('"')[1]  # Extract variable name
+            for chart in akash_data['charts']:
+                chart_name = chart['chart']
+                version = chart['version']
+                if variable_name == chart_name:
+                    updated_line = f' default = "{version}"\n'
+                    line = line.replace(line.split('=')[1].strip(), updated_line.strip())
+                    break
         updated_lines.append(line)
 
     # Write updated input.tf
