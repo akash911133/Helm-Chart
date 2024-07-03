@@ -19,16 +19,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install jq
-        run: |
-          apt-get update -y
-          apt-get install -y jq
-
       - name: Install Helm
         run: |
           wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           mv linux-amd64/helm /usr/local/bin/helm
+
+      - name: Install jq
+        run: |
+          apt-get update -y
+          apt-get install -y jq
 
       - name: Add Helm repo and check versions
         run: |
