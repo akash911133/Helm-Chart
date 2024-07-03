@@ -1,13 +1,16 @@
-
 name: Helm Chart Update Check
 
 on:
   push:
     branches:
-      - main # Adjust to the branch you want to trigger this on
+      - main  # Adjust to the branch you want to trigger this on
   pull_request:
     branches:
       - main  # Adjust to the branch you want to trigger this on
+
+env:
+  HELM_PACKAGE_VERSION: 'v3.12.0'
+  HELM_S3_PLUGIN_VERSION: 'v0.13.0'
 
 jobs:
   helm-check:
@@ -18,12 +21,9 @@ jobs:
 
       - name: Install Helm
         run: |
-          apt-get update -y
-          curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
-          apt-get install apt-transport-https --yes
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
-          apt-get update -y
-          apt-get install helm -y
+          wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
+          tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
+          mv linux-amd64/helm /usr/local/bin/helm
 
       - name: Add Helm repo and check versions
         run: |
@@ -45,4 +45,3 @@ jobs:
           else
             echo "No update needed for $chart_name. Current version: $version"
           fi
-
