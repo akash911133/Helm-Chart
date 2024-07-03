@@ -67,3 +67,4 @@ jobs:
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
+          
