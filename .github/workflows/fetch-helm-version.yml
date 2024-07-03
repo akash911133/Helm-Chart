@@ -24,7 +24,7 @@ jobs:
           wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           sudo mv linux-amd64/helm /usr/local/bin/helm
-          
+
       - name: List files for debugging
         run: |
           ls -la
@@ -37,30 +37,33 @@ jobs:
 
       - name: Add Helm repo and check versions
         run: |
-          # Check if akash.yml exists
-          if [ ! -f akash.yml ]; then
-            echo "akash.yml file not found!"
-            exit 1
-          fi
+          # Read the list of charts from akash.yml
+          charts=$(jq -c '.charts[]' akash.yml)
 
-          # Load variables from akash.yml
-          chart_name=$(jq -r '.chart' akash.yml)
-          repository=$(jq -r '.repository' akash.yml)
-          version=$(jq -r '.version' akash.yml)
+          # Iterate over each chart
+          echo "$charts" | while IFS= read -r chart; do
+            chart_name=$(echo "$chart" | jq -r '.chart')
+            repository=$(echo "$chart" | jq -r '.repository')
+            version=$(echo "$chart" | jq -r '.version')
 
-          # Add Helm repo
-          helm repo add $chart_name $repository
+            echo "Checking chart: $chart_name"
+            echo "Repository: $repository"
+            echo "Current Version: $version"
 
-          # Update Helm repos
-          helm repo update
+            # Add Helm repo
+            helm repo add $chart_name $repository
 
-          # Search for available versions
-          latest_version=$(helm search repo $chart_name/$chart_name --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+            # Update Helm repos
+            helm repo update
 
-          # Compare versions
-          if dpkg --compare-versions "$version" lt "$latest_version"; then
-            echo "Version update needed for $chart_name. Current version: $version, Latest version: $latest_version"
-            # You can add further actions here if an update is needed
-          else
-            echo "No update needed for $chart_name. Current version: $version"
-          fi
+            # Search for available versions
+            latest_version=$(helm search repo $chart_name/$chart_name --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+
+            # Compare versions
+            if dpkg --compare-versions "$version" lt "$latest_version"; then
+              echo "Version update needed for $chart_name. Current version: $version, Latest version: $latest_version"
+              # You can add further actions here if an update is needed
+            else
+              echo "No update needed for $chart_name. Current version: $version"
+            fi
+          done
