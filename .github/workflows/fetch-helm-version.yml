@@ -1,0 +1,48 @@
+
+name: Helm Chart Update Check
+
+on:
+  push:
+    branches:
+      - master # Adjust to the branch you want to trigger this on
+  pull_request:
+    branches:
+      - master  # Adjust to the branch you want to trigger this on
+
+jobs:
+  helm-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Helm
+        run: |
+          apt-get update -y
+          curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
+          apt-get install apt-transport-https --yes
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
+          apt-get update -y
+          apt-get install helm -y
+
+      - name: Add Helm repo and check versions
+        run: |
+          # Load variables from akash.yaml
+          chart_name=$(jq -r '.chart' akash.yaml)
+          repository=$(jq -r '.repository' akash.yaml)
+          version=$(jq -r '.version' akash.yaml)
+
+          # Add Helm repo
+          helm repo add $chart_name $repository
+
+          # Search for available versions
+          latest_version=$(helm search repo $chart_name/$chart_name --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+
+          # Compare versions
+          if dpkg --compare-versions "$version" lt "$latest_version"; then
+            echo "Version update needed for $chart_name. Current version: $version, Latest version: $latest_version"
+            # You can add further actions here if an update is needed
+          else
+            echo "No update needed for $chart_name. Current version: $version"
+          fi
+
