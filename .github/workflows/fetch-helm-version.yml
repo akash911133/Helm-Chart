@@ -31,7 +31,7 @@ jobs:
       - name: Install jq
         run: |
           apt-get update -y
-          apt-get install -y jq
+          apt-get install jq -y
 
       - name: Add Helm repo and check versions
         run: |
