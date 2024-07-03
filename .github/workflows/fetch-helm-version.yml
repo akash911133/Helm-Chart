@@ -23,33 +23,14 @@ jobs:
         run: |
           wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
-          mv linux-amd64/helm /usr/local/bin/helm
+          sudo mv linux-amd64/helm /usr/local/bin/helm
           
       - name: List files for debugging
-        run: ls -la
+        run: |
+          ls -la
+          cat akash.yaml
 
       - name: Install jq
         run: |
           sudo apt-get update -y
           sudo apt-get install jq -y
-
-      - name: Add Helm repo and check versions
-        run: |
-          # Load variables from akash.yaml
-          chart_name=$(jq -r '.chart' akash.yaml)
-          repository=$(jq -r '.repository' akash.yaml)
-          version=$(jq -r '.version' akash.yaml)
-
-          # Add Helm repo
-          helm repo add $chart_name $repository
-
-          # Search for available versions
-          latest_version=$(helm search repo $chart_name/$chart_name --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-
-          # Compare versions
-          if dpkg --compare-versions "$version" lt "$latest_version"; then
-            echo "Version update needed for $chart_name. Current version: $version, Latest version: $latest_version"
-            # You can add further actions here if an update is needed
-          else
-            echo "No update needed for $chart_name. Current version: $version"
-          fi
