@@ -7,7 +7,7 @@ variable "ingress-nginx" {
 }
 
 variable "metrics-server" {
- default = "3.8.2"
+ default = "3.12.1"
 }
 
 variable "aws-efs-csi-driver" {
