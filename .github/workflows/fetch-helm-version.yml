@@ -3,10 +3,10 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - test-1  # Adjust to the branch you want to trigger this on
+      - main  # Adjust to the branch you want to trigger this on
   pull_request:
     branches:
-      - test-1  # Adjust to the branch you want to trigger this on
+      - main  # Adjust to the branch you want to trigger this on
   schedule:
     - cron: "0 0 * * 1"  # Run every Monday at midnight UTC
 
