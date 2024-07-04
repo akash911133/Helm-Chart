@@ -3,12 +3,11 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - main  # Adjust to the branch you want to trigger this on
+      - test-1  # Adjust to the branch you want to trigger this on
   pull_request:
     branches:
-      - main  # Adjust to the branch you want to trigger this on
-  schedule:
-    - cron: "0 0 * * 1"  # Run every Monday at midnight UTC
+      - test-1  # Adjust to the branch you want to trigger this on
+
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
@@ -78,9 +77,11 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check-versions.outputs.should-create-pr == 'true'
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
-          branch: test-1  # Set the base branch for the pull request
+          branch: NCP-1185-update-httpd-version  # Set the base branch for the pull request
           title: 'Update Helm chart versions'
           body: 'This PR updates Helm chart versions to the latest available versions.'
           labels: update
+          base: test-1
+          delete-branch: true
