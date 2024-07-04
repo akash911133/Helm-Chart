@@ -17,7 +17,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-
       - name: Install Helm
         run: |
           wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
@@ -42,7 +41,6 @@ jobs:
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
             echo "Current Version: $version"
-
             helm repo add $chart_name $repository
             helm repo update
 
@@ -81,8 +79,3 @@ jobs:
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
-
-
-
-
-
