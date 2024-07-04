@@ -79,7 +79,7 @@ jobs:
         if: env.UPDATE_NEEDED == 'true'
         uses: peter-evans/create-pull-request@v4
         with:
-          branch: ${{ steps.check-versions.outputs.branch_name }}
+          branch: NCP-1185-update-httpd-version
           base: test-1
           title: 'Update Helm chart versions'
           body: 'This PR updates Helm chart versions to the latest available versions.'
