@@ -3,7 +3,7 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - test-1
+      - Test
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: test-1
+          ref: Test
 
       - name: Install Helm
         run: |
@@ -74,7 +74,7 @@ jobs:
                   "title": "Update Helm chart versions",
                   "body": "This PR updates Helm chart versions to the latest available versions.",
                   "head": "NCP-2103-update-helm-version",
-                  "base": "test-1"
+                  "base": "Test"
                 }'
 
             else
