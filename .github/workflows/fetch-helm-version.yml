@@ -1,6 +1,5 @@
 name: Helm Chart Update Check
 
-
 on:
   push:
     branches:
@@ -58,7 +57,7 @@ jobs:
             if dpkg --compare-versions "$version" lt "$latest_version"; then
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
-                '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > tmp.$$.json && mv tmp.$$.json akash.json
+                '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
             else
               echo "No update needed for $chart_name. Current version: $version"
@@ -70,10 +69,8 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          branch_name="NCP-1185-update-httpd-version"
-          git checkout -b $branch_name
+          git checkout -b "NCP-1185-update-httpd-version"
           git add akash.json
           git commit -m 'Update Helm chart versions'
-          git push origin HEAD:$branch_name
-
+          git push origin HEAD:"NCP-1185-update-httpd-version"
 
