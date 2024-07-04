@@ -71,10 +71,10 @@ jobs:
 
                 # Update input.tf with the latest version
                 terraform fmt -write=false -out=input.tf <<EOF
-                variable "$chart_name" {
-                  default = "$latest_version"
-                }
-                EOF
+variable "$chart_name" {
+  default = "$latest_version"
+}
+EOF
               done
 
               # Configure Git
