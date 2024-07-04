@@ -3,28 +3,21 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - Test  # Adjust to the branch you want to trigger this on
-  pull_request:
-    branches:
-      - Test  # Adjust to the branch you want to trigger this on
-
+      - test-1
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
   HELM_S3_PLUGIN_VERSION: 'v0.13.0'
+  UPDATE_NEEDED: 'false'
 
 jobs:
   helm-check:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      packages: read
-      statuses: write
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: test-1
 
       - name: Install Helm
         run: |
@@ -32,23 +25,17 @@ jobs:
           tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           sudo mv linux-amd64/helm /usr/local/bin/helm
 
-      - name: List files for debugging
-        run: |
-          ls -la
-          cat akash.json
-
       - name: Install jq
         run: |
           sudo apt-get update -y
           sudo apt-get install jq -y
 
-      - name: Add Helm repo and check versions
+      - name: Check and Update Helm chart versions
+        id: check-versions
         run: |
-          # Read the list of charts from akash.json
           charts=$(jq -c '.charts[]' akash.json)
 
-          # Iterate over each chart
-          echo "$charts" | while IFS= read -r chart; do
+          for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
             version=$(echo "$chart" | jq -r '.version')
@@ -57,32 +44,42 @@ jobs:
             echo "Repository: $repository"
             echo "Current Version: $version"
 
-            # Add Helm repo
             helm repo add $chart_name $repository
-
-            # Update Helm repos
             helm repo update
 
-            # Search for available versions
             latest_version=$(helm search repo $chart_name/$chart_name --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
-            # Compare versions
             if dpkg --compare-versions "$version" lt "$latest_version"; then
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
-              # You can add further actions here if an update is needed
+              jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
+                '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
+              echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+              
+              git config --global user.name 'github-actions[bot]'
+              git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+              git checkout -b "NCP-2103-update-helm-version-$chart_name"
+              git add akash.json
+              git commit -m 'Update Helm chart versions'
+              git push origin HEAD:"NCP-2103-update-helm-version-$chart_name"
+
+              # Extract the commit hash for the push
+              COMMIT_HASH=$(git rev-parse HEAD)
+
+              # Create a pull request using GitHub REST API
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/${{ github.repository }}/pulls \
+                -d '{
+                  "title": "Update Helm chart versions",
+                  "body": "This PR updates Helm chart versions to the latest available versions.",
+                  "head": "NCP-2103-update-helm-version",
+                  "base": "test-1"
+                }'
+
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
 
-      - name: Run Python script to update input.tf
-        run: |
-          python main.py
 
-      - name: Commit and push changes to input.tf
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add Terraform/input.tf
-          git commit -m "Update versions in input.tf from GitHub Actions"
-          git push
