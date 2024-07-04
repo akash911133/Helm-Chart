@@ -15,7 +15,7 @@ variable "aws-efs-csi-driver" {
 }
 
 variable "aws-load-balancer-controller" {
- default = "1.5.5"
+ default = "1.8.1"
 }
 
 variable "cert-manager" {
