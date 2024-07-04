@@ -3,7 +3,7 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - hello-1
+      - test-1
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: hello-1
+          ref: test-1
 
       - name: Install Helm
         run: |
