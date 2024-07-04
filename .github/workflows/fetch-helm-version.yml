@@ -66,12 +66,7 @@ jobs:
               echo "input.tf before update:"
               cat Terraform/input.tf
 
-              # Update input.tf file
-              sed -i 's/\(variable "'$chart'" {[^}]*default = "\)[^"]*/\1'$latest_version'/' Terraform/input.tf
 
-              # Debug: Show input.tf after update
-              echo "input.tf after update:"
-              cat Terraform/input.tf
 
               # Configure Git
               git config --global user.name 'github-actions[bot]'
