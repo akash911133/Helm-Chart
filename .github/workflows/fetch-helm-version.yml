@@ -22,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: test-1
+          ref: test-1  # Adjust to the branch you want to work on
 
       - name: Install Helm
         run: |
@@ -30,17 +30,12 @@ jobs:
           tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           sudo mv linux-amd64/helm /usr/local/bin/helm
 
-      - name: List files for debugging
-        run: |
-          ls -la
-          cat akash.json
-
       - name: Install jq
         run: |
           sudo apt-get update -y
           sudo apt-get install jq -y
 
-      - name: Add Helm repo and check versions
+      - name: Check and Update Helm chart versions
         id: check-versions
         run: |
           charts=$(jq -c '.charts[]' akash.json)
@@ -69,7 +64,7 @@ jobs:
             fi
           done
 
-      - name: Commit changes
+      - name: Commit and Push changes if update needed
         if: env.UPDATE_NEEDED == 'true'
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -77,18 +72,15 @@ jobs:
           git checkout -b update-helm-charts-$(date +%s)
           git add akash.json
           git commit -m 'Update Helm chart versions'
-
-      - name: Push changes
-        if: env.UPDATE_NEEDED == 'true'
-        run: |
-          git push https://$GITHUB_ACTOR:${{ secrets.PAT_TOKEN }}@github.com/$GITHUB_REPOSITORY HEAD
+          git push origin HEAD:update-helm-charts-$(date +%s)
 
       - name: Create Pull Request
         if: env.UPDATE_NEEDED == 'true'
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
-          branch: update-helm-charts-$(date +%s)
+          branch: "update-akash-helm-charts-$(date +%s)"
           base: test-1
-          title: 'Update Helm chart versions'
+          title: 'Update Helm chart versions '
           body: 'This PR updates Helm chart versions to the latest available versions.'
           labels: update
+          delete-branch: true
