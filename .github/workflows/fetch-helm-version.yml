@@ -3,12 +3,7 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - test-1  # Adjust to the branch you want to trigger this on
-  pull_request:
-    branches:
-      - test-1  # Adjust to the branch you want to trigger this on
-  schedule:
-    - cron: "0 0 * * 1"  # Run every Monday at midnight UTC
+      - hello-1
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
@@ -22,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: test-1
+          ref: hello-1
 
       - name: Install Helm
         run: |
@@ -30,17 +25,12 @@ jobs:
           tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
           sudo mv linux-amd64/helm /usr/local/bin/helm
 
-      - name: List files for debugging
-        run: |
-          ls -la
-          cat akash.json
-
       - name: Install jq
         run: |
           sudo apt-get update -y
           sudo apt-get install jq -y
 
-      - name: Add Helm repo and check versions
+      - name: Check and Update Helm chart versions
         id: check-versions
         run: |
           charts=$(jq -c '.charts[]' akash.json)
@@ -61,34 +51,27 @@ jobs:
 
             if dpkg --compare-versions "$version" lt "$latest_version"; then
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
+              # Update the version in akash.json
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
-                '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > tmp.$$.json && mv tmp.$$.json akash.json
+                '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+              echo "$chart_name" >> "$GITHUB_OUTPUT"  # Store chart name for later use
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
 
-      - name: Commit changes
+      - name: Commit and Push changes if update needed
         if: env.UPDATE_NEEDED == 'true'
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git checkout -b update-helm-charts-$(date +%s)
-          git add akash.json
-          git commit -m 'Update Helm chart versions'
 
-      - name: Push changes
-        if: env.UPDATE_NEEDED == 'true'
-        run: |
-          git push https://$GITHUB_ACTOR:${{ secrets.PAT_TOKEN }}@github.com/$GITHUB_REPOSITORY HEAD
+          # Iterate over updated charts and create branches and push changes
+          while IFS= read -r chart_name; do
+            git checkout -b "update-$chart_name"
+            git add akash.json
+            git commit -m "Update $chart_name version"
+            git push origin HEAD:"update-$chart_name"
+          done < "$GITHUB_OUTPUT"
 
-      - name: Create Pull Request
-        if: env.UPDATE_NEEDED == 'true'
-        uses: peter-evans/create-pull-request@v4
-        with:
-          branch: update-helm-charts-$(date +%s)
-          base: test-1
-          title: 'Update Helm chart versions'
-          body: 'This PR updates Helm chart versions to the latest available versions.'
-          labels: update
