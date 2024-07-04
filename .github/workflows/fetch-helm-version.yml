@@ -3,7 +3,7 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - test-1
+      - hello-1
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: test-1
+          ref: hello-1
 
       - name: Install Helm
         run: |
@@ -68,7 +68,7 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
           # Read chart names from GitHub environment variable
-          charts=$(echo "$CHART_NAMES" | tr '\n' ' ')
+          charts=$(echo "$GITHUB_ENV" | grep -oP '(?<=chart_name=).*')
 
           # Iterate over updated charts and create branches and push changes
           for chart_name in $charts; do
