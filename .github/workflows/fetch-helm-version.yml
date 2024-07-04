@@ -67,7 +67,7 @@ jobs:
               cat Terraform/input.tf
 
               # Update input.tf file
-              sed -i 's/\(variable "'$chart_name'" {[^}]*default = "\)[^"]*/\1'$latest_version'/' Terraform/input.tf
+              sed -i 's/\(variable "'$chart'" {[^}]*default = "\)[^"]*/\1'$latest_version'/' Terraform/input.tf
 
               # Debug: Show input.tf after update
               echo "input.tf after update:"
