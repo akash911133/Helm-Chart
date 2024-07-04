@@ -60,12 +60,22 @@ jobs:
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
-              # Update input.tf file
-              sed -i "s/\(variable \"$chart_name\" {\s*default = \)\"[^\"]*\"/\1\"$latest_version\"/" Terraform/input.tf
-
-              # Debug: Show input.tf after update
-              echo "input.tf after update:"
+              # Debug: Show input.tf before update
+              echo "input.tf before update:"
               cat Terraform/input.tf
+
+              # Update input.tf with latest chart versions
+              for chart in $charts; do
+                chart_name=$(echo "$chart" | jq -r '.chart')
+                latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+
+                # Update input.tf with the latest version
+                terraform fmt -write=false -out=input.tf <<EOF
+                variable "$chart_name" {
+                  default = "$latest_version"
+                }
+                EOF
+              done
 
               # Configure Git
               git config --global user.name 'github-actions[bot]'
