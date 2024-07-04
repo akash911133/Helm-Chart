@@ -75,12 +75,4 @@ jobs:
           git commit -m 'Update Helm chart versions'
           git push origin HEAD:$branch_name
 
-      - name: Create Pull Request
-        if: env.UPDATE_NEEDED == 'true'
-        uses: peter-evans/create-pull-request@v4
-        with:
-          branch: NCP-1185-update-httpd-version
-          base: test-1
-          title: 'Update Helm chart versions'
-          body: 'This PR updates Helm chart versions to the latest available versions.'
-          labels: update
+
