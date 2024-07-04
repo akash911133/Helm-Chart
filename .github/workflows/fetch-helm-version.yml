@@ -1,6 +1,5 @@
 name: Helm Chart Update Check
 
-
 on:
   push:
     branches:
@@ -63,8 +62,16 @@ jobs:
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
+              # Debug: Show input.tf before update
+              echo "input.tf before update:"
+              cat Terraform/input.tf
+
               # Update input.tf file
-              sed -i 's/variable "'$chart_name'" {[^}]*default = "[^"]*"[^}]*}/variable "'$chart_name'" {\n default = "'$latest_version'"\n}/' Terraform/input.tf
+              sed -i 's/\(variable "'$chart_name'" {[^}]*default = "\)[^"]*/\1'$latest_version'/' Terraform/input.tf
+
+              # Debug: Show input.tf after update
+              echo "input.tf after update:"
+              cat Terraform/input.tf
 
               # Configure Git
               git config --global user.name 'github-actions[bot]'
