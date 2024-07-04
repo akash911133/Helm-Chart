@@ -55,7 +55,7 @@ jobs:
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
-              echo "$chart_name" >> "$GITHUB_OUTPUT"  # Store chart name for later use
+              echo "$chart_name" >> "$GITHUB_ENV"  # Store chart name in GitHub environment variable
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
@@ -67,11 +67,14 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
+          # Read chart names from GitHub environment variable
+          charts=$(echo "$CHART_NAMES" | tr '\n' ' ')
+
           # Iterate over updated charts and create branches and push changes
-          while IFS= read -r chart_name; do
+          for chart_name in $charts; do
             git checkout -b "update-$chart_name"
             git add akash.json
             git commit -m "Update $chart_name version"
             git push origin HEAD:"update-$chart_name"
-          done < "$GITHUB_OUTPUT"
+          done
 
