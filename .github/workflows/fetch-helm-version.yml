@@ -60,6 +60,7 @@ jobs:
             fi
           done
 
+          
       - name: Commit and Push changes if update needed
         if: env.UPDATE_NEEDED == 'true'
         run: |
