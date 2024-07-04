@@ -1,6 +1,4 @@
 name: Helm Chart Update Check
-
-
 on:
   push:
     branches:
