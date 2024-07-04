@@ -62,6 +62,9 @@ jobs:
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
+              # Update input.tf file
+              sed -i 's/variable "'$chart_name'" {[^}]*default = "[^"]*"[^}]*}/variable "'$chart_name'" {\n default = "'$latest_version'"\n}/' Terraform/input.tf
+
               # Configure Git
               git config --global user.name 'github-actions[bot]'
               git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -70,7 +73,7 @@ jobs:
               git checkout -b "update-helm-version-$chart_name"
 
               # Stage and commit changes
-              git add akash.json
+              git add akash.json Terraform/input.tf
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
               git push origin HEAD:"update-helm-version-$chart_name"
 
