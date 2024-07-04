@@ -59,12 +59,14 @@ jobs:
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+              echo "should-create-pr=true" >> "$GITHUB_OUTPUT"
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
 
       - name: Commit and Push changes if update needed
+        id: compare_versions
         if: env.UPDATE_NEEDED == 'true'
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -75,7 +77,7 @@ jobs:
           git push origin HEAD:"NCP-1185-update-httpd-version"
 
       - name: Create Pull Request
-        if: env.UPDATE_NEEDED == 'true'
+        if: steps.check-versions.outputs.should-create-pr == 'true'
         uses: peter-evans/create-pull-request@v4
         with:
           branch: test-1  # Set the base branch for the pull request
