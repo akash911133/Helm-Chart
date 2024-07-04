@@ -65,13 +65,16 @@ jobs:
               cat Terraform/input.tf
 
               # Update input.tf with latest chart versions
-              jq -c '.charts[]' akash.json | while read -r updated_chart; do
-                updated_chart_name=$(echo "$updated_chart" | jq -r '.chart')
-                updated_version=$(echo "$updated_chart" | jq -r '.version')
+              updated_chart=$(jq -c --arg chart_name "$chart_name" '.charts[] | select(.chart == $chart_name)' akash.json)
+              updated_chart_name=$(echo "$updated_chart" | jq -r '.chart')
+              updated_version=$(echo "$updated_chart" | jq -r '.version')
 
-                # Update input.tf with the latest version
-                sed -i "s/\(variable \"$updated_chart_name\" {[^}]*default = \).*/\1\"$updated_version\" }/" Terraform/input.tf
-              done
+              # Use sed to update input.tf with the latest version
+              sed -i "s/\(variable \"$updated_chart_name\" {[^}]*default = \).*/\1\"$updated_version\" }/" Terraform/input.tf
+
+              # Debug: Show input.tf after update
+              echo "input.tf after update:"
+              cat Terraform/input.tf
 
               # Configure Git
               git config --global user.name 'github-actions[bot]'
@@ -84,9 +87,6 @@ jobs:
               git add akash.json Terraform/input.tf
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
               git push origin HEAD:"update-helm-version-$chart_name"
-
-              # Extract the commit hash for the push
-              COMMIT_HASH=$(git rev-parse HEAD)
 
               # Create a pull request using GitHub REST API
               curl -X POST \
