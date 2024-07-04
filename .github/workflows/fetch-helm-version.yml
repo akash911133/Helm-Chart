@@ -65,16 +65,12 @@ jobs:
               cat Terraform/input.tf
 
               # Update input.tf with latest chart versions
-              for chart in $charts; do
-                chart_name=$(echo "$chart" | jq -r '.chart')
-                latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+              jq -c '.charts[]' akash.json | while read -r updated_chart; do
+                updated_chart_name=$(echo "$updated_chart" | jq -r '.chart')
+                updated_version=$(echo "$updated_chart" | jq -r '.version')
 
                 # Update input.tf with the latest version
-                terraform fmt -write=false -out=input.tf <<EOF
-variable "$chart_name" {
-  default = "$latest_version"
-}
-EOF
+                sed -i "s/\(variable \"$updated_chart_name\" {[^}]*default = \).*/\1\"$updated_version\" }/" Terraform/input.tf
               done
 
               # Configure Git
