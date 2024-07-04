@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - Test
-
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
   HELM_S3_PLUGIN_VERSION: 'v0.13.0'
