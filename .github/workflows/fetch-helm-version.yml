@@ -37,7 +37,7 @@ jobs:
           for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
-            version=$(echo "$chart" | jq -r '.version' | sed 's/^v//')
+            version=$(echo "$chart" | jq -r '.version' )
 
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
