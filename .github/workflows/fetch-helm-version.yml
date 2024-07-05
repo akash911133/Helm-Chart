@@ -61,7 +61,7 @@ jobs:
                 jq --arg chart_name "$chart_name" --arg latest_version "v$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = "v$latest_version"' akash.json > akash_updated.json && mv akash_updated.json akash.json
                 echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
-
+                version=$(echo "$version" | sed 's/$latest_version/v$latest_version/g')
                 # Debug: Show input.tf before update
                 echo "input.tf before update:"
                 cat Terraform/input.tf
