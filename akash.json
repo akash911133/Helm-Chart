@@ -13,7 +13,7 @@
     {
       "chart": "metrics-server",
       "repository": "https://kubernetes-sigs.github.io/metrics-server",
-      "version": "3.8.2"
+      "version": "3.12.1"
     },
     {
       "chart": "aws-efs-csi-driver",
