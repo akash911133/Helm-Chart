@@ -44,9 +44,9 @@ jobs:
             echo "Current Version: $version"
 
             # Add Helm repo if not already added
-            if ! helm repo list | grep -q "$chart_name"; then
-              helm repo add "$chart_name" "$repository"
-            fi
+
+            helm repo add "$chart_name" "$repository"
+
 
             # Update Helm repo
             helm repo update
