@@ -98,6 +98,9 @@ jobs:
                   "head": "update-helm-version-'$chart_name'",
                   "base": "Test"
                 }'
+
+              # Reset the repository to the original state
+              git reset --hard origin/Test
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
