@@ -11,7 +11,7 @@ variable "metrics-server" {
 }
 
 variable "aws-efs-csi-driver" {
- default = "2.2.9"
+ default = " default = "3.0.6""
 }
 
 variable "aws-load-balancer-controller" {
