@@ -28,17 +28,27 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install jq -y
 
+      - name: Setup Last Updated Chart Tracker
+        run: |
+          if [ ! -f last_updated_chart.txt ]; then
+            echo "none" > last_updated_chart.txt
+          fi
+
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
+          last_updated_chart=$(cat last_updated_chart.txt)
           charts=$(jq -c '.charts[]' akash.json)
           updated=false
 
           for chart in $charts; do
-            updated=false
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
             version=$(echo "$chart" | jq -r '.version')
+
+            if [ "$last_updated_chart" != "none" ] && [ "$chart_name" = "$last_updated_chart" ]; then
+              continue
+            fi
 
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
@@ -59,7 +69,7 @@ jobs:
             version=$(echo $version | sed 's/v//g')
             if dpkg --compare-versions "$version" lt "$latest_version"; then
               if [ "$updated" = true ]; then
-                echo "Skipping update for $chart_name since a previous update has been done."
+                echo "Skipping update for $chart_name since an update has already been done in this run."
                 continue
               fi
 
@@ -87,7 +97,7 @@ jobs:
               git checkout -b "update-helm-version-$chart_name"
 
               # Stage and commit changes
-              git add akash.json Terraform/input.tf
+              git add akash.json Terraform/input.tf last_updated_chart.txt
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
               git push origin HEAD:"update-helm-version-$chart_name"
 
@@ -107,6 +117,8 @@ jobs:
                 }'
               
               updated=true
+              echo "$chart_name" > last_updated_chart.txt
+              break
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
