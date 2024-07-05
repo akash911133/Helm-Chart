@@ -23,7 +23,7 @@ variable "cert-manager" {
 }
 
 variable "datadog-crds" {
- default = "0.4.7"
+ default = "1.7.0"
 }
 
 variable "datadog" {
