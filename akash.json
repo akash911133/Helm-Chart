@@ -28,7 +28,7 @@
     {
       "chart": "cert-manager",
       "repository": "https://charts.jetstack.io",
-      "version": "v1.10.0"
+      "version": "v1.15.1"
     },
     {
       "chart": "datadog-crds",
