@@ -82,7 +82,7 @@ jobs:
               # Stage and commit changes
               git add akash.json Terraform/input.tf
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
-              git push origin HEAD:"update-helm-version-$chart_name"
+              git push origin HEAD:"update-helm-version-1-$chart_name"
 
               # Extract the commit hash for the push
               COMMIT_HASH=$(git rev-parse HEAD)
