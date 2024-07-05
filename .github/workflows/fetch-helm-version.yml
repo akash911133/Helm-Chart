@@ -95,9 +95,13 @@ jobs:
                 -d '{
                   "title": "Update Helm chart version for '"$chart_name"'",
                   "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
-                  "head": "update-helm-version-'$chart_name'",
+                  "head": "update-helm-version-1-'$chart_name'",
                   "base": "Test"
                 }'
+              
+              # Stop after updating the first chart to ensure one change per PR
+              exit 0
+
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
