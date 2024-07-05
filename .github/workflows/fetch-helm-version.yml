@@ -32,6 +32,7 @@ jobs:
         id: check-versions
         run: |
           charts=$(jq -c '.charts[]' akash.json)
+          updated=false
 
           for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
@@ -56,6 +57,11 @@ jobs:
             # Compare versions and update if needed
             version=$(echo $version | sed 's/v//g')
             if dpkg --compare-versions "$version" lt "$latest_version"; then
+              if [ "$updated" = true ]; then
+                echo "Skipping update for $chart_name since a previous update has been done."
+                continue
+              fi
+
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
@@ -77,13 +83,12 @@ jobs:
               git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
               # Create a new branch for the update
-              feature_branch="update-helm-version-$chart_name"
-              git checkout -b "$feature_branch"
+              git checkout -b "update-helm-version-$chart_name"
 
               # Stage and commit changes
               git add akash.json Terraform/input.tf
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
-              git push origin HEAD:"$feature_branch"
+              git push origin HEAD:"update-helm-version-$chart_name"
 
               # Extract the commit hash for the push
               COMMIT_HASH=$(git rev-parse HEAD)
@@ -96,9 +101,11 @@ jobs:
                 -d '{
                   "title": "Update Helm chart version for '"$chart_name"'",
                   "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
-                  "head": "'"$feature_branch"'",
+                  "head": "update-helm-version-'$chart_name'",
                   "base": "Test"
                 }'
+              
+              updated=true
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
