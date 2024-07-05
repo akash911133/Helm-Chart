@@ -44,9 +44,7 @@ jobs:
             echo "Current Version: $version"
 
             # Add Helm repo if not already added
-
             helm repo add "$chart_name" "$repository"
-
 
             # Update Helm repo
             helm repo update
@@ -55,15 +53,14 @@ jobs:
             latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
             # Compare versions and update if needed
-            if dpkg --compare-versions "$version" lt "$latest_version"; then
+            if [[ "$chart_name" == "cert-manager" ]]; then
+              echo "No update needed for $chart_name. Current version: $version"
+            elif dpkg --compare-versions "$version" lt "$latest_version"; then
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
+              
+              # Update akash.json
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
-              echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
-
-              # Debug: Show input.tf before update
-              echo "input.tf before update:"
-              cat Terraform/input.tf
 
               # Update input.tf file
               sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
@@ -71,6 +68,9 @@ jobs:
               # Debug: Show input.tf after update
               echo "input.tf after update:"
               cat Terraform/input.tf
+
+              # Set flag for update needed
+              echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
               # Configure Git
               git config --global user.name 'github-actions[bot]'
