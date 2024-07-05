@@ -28,27 +28,15 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install jq -y
 
-      - name: Setup Last Updated Chart Tracker
-        run: |
-          if [ ! -f last_updated_chart.txt ]; then
-            echo "none" > last_updated_chart.txt
-          fi
-
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
-          last_updated_chart=$(cat last_updated_chart.txt)
           charts=$(jq -c '.charts[]' akash.json)
-          updated=false
 
           for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
             version=$(echo "$chart" | jq -r '.version')
-
-            if [ "$last_updated_chart" = "$chart_name" ]; then
-              continue
-            fi
 
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
@@ -92,7 +80,7 @@ jobs:
               git checkout -b "update-helm-version-$chart_name"
 
               # Stage and commit changes
-              git add akash.json Terraform/input.tf last_updated_chart.txt
+              git add akash.json Terraform/input.tf
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
               git push origin HEAD:"update-helm-version-$chart_name"
 
@@ -110,30 +98,7 @@ jobs:
                   "head": "update-helm-version-'$chart_name'",
                   "base": "Test"
                 }'
-              
-              updated=true
-              echo "$chart_name" > last_updated_chart.txt
-              break
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
-
-      - name: Cleanup Last Updated Chart Tracker
-        if: success()
-        run: |
-          last_updated_chart=$(cat last_updated_chart.txt)
-          charts=$(jq -c '.charts[]' akash.json)
-          all_updated=true
-
-          for chart in $charts; do
-            chart_name=$(echo "$chart" | jq -r '.chart')
-            if [ "$last_updated_chart" != "$chart_name" ]; then
-              all_updated=false
-              break
-            fi
-          done
-
-          if [ "$all_updated" = true ]; then
-            echo "none" > last_updated_chart.txt
-          fi
