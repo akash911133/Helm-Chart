@@ -2,7 +2,7 @@ name: Helm Chart Update Check
 on:
   push:
     branches:
-      - Test
+      - optimized
       
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
@@ -53,19 +53,17 @@ jobs:
             # Get the latest version available
             latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
+            # Debug: Show input.tf before update
+            echo "input.tf before update:"
+            cat Terraform/input.tf
 
-            if [[ "v$version" == v* ]]; then
+            if [[ "$version" == v* ]]; then
               version=$(echo "$version" | sed 's/v//g')
               if dpkg --compare-versions "$version" lt "$latest_version"; then
                 echo -e "\n\033[34mVersion update needed for $chart_name. Current version: v$version, Latest version: v$latest_version\033[0m\n"
-                # jq --arg chart_name "$chart_name" --arg latest_version "v$latest_version" \
-                # '(.charts[] | select(.chart == $chart_name) | .version) = "v$latest_version"' akash.json > akash_updated.json && mv akash_updated.json akash.json
                 echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
                 version=$(echo "$version" | sed 's/$latest_version/v$latest_version/g')
                 echo "Latest Version :::   $latest_version"
-                # Debug: Show input.tf before update
-                echo "input.tf before update:"
-                cat Terraform/input.tf
 
                 # Update input.tf file
               sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
@@ -77,13 +75,8 @@ jobs:
             # Compare versions and update if needed
             if dpkg --compare-versions "$version" lt "$latest_version"; then
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
-              # jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
-              #   '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
-              # echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+              echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
-              # Debug: Show input.tf before update
-              echo "input.tf before update:"
-              cat Terraform/input.tf
 
               # Update input.tf file
               sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
@@ -108,7 +101,7 @@ jobs:
               COMMIT_HASH=$(git rev-parse HEAD)
 
               # Create a pull request using GitHub REST API
-              curl -s -X POST \
+              curl -ss -X POST \
                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
                 https://api.github.com/repos/${{ github.repository }}/pulls \
@@ -116,11 +109,12 @@ jobs:
                   "title": "Update Helm chart version for '"$chart_name"'",
                   "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
                   "head": "update-helm-version-'$chart_name'",
-                  "base": "Test"
+                  "base": "optimized"
                 }'
 
               # Reset the repository to the original state
-              git reset --hard origin/Test
+              git reset --hard origin/optimized
+
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
