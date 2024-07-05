@@ -38,7 +38,7 @@
     {
       "chart": "datadog",
       "repository": "https://helm.datadoghq.com",
-      "version": "3.1.11"
+      "version": "v3.67.2"
     }
   ]
 }
