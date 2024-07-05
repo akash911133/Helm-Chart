@@ -23,7 +23,7 @@
     {
       "chart": "aws-load-balancer-controller",
       "repository": "https://aws.github.io/eks-charts",
-      "version": "1.5.5"
+      "version": "v1.8.1"
     },
     {
       "chart": "cert-manager",
