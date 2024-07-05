@@ -54,54 +54,66 @@ jobs:
 
             # Compare versions and update if needed
             if [[ "$chart_name" == "cert-manager" ]]; then
+              echo "Checking chart: $chart_name"
+              echo "Repository: $repository"
+              echo "Current Version: $version"
               echo "No update needed for $chart_name. Current version: $version"
-            elif dpkg --compare-versions "$version" lt "$latest_version"; then
-              echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
               
               # Update akash.json
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
 
-              # Update input.tf file
-              sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
-
-              # Debug: Show input.tf after update
-              echo "input.tf after update:"
-              cat Terraform/input.tf
-
               # Set flag for update needed
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
-
-              # Configure Git
-              git config --global user.name 'github-actions[bot]'
-              git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-              # Create a new branch for the update
-              git checkout -b "update-helm-version-$chart_name"
-
-              # Stage and commit changes
-              git add akash.json Terraform/input.tf
-              git commit -m "Update Helm chart version for $chart_name to $latest_version"
-              git push origin HEAD:"update-helm-version-$chart_name"
-
-              # Extract the commit hash for the push
-              COMMIT_HASH=$(git rev-parse HEAD)
-
-              # Create a pull request using GitHub REST API
-              curl -s -X POST \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/${{ github.repository }}/pulls \
-                -d '{
-                  "title": "Update Helm chart version for '"$chart_name"'",
-                  "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
-                  "head": "update-helm-version-'$chart_name'",
-                  "base": "Test"
-                }'
-
-              # Reset the repository to the original state
-              git reset --hard origin/Test
             else
-              echo "No update needed for $chart_name. Current version: $version"
+              if dpkg --compare-versions "$version" lt "$latest_version"; then
+                echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
+                
+                # Update akash.json
+                jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
+                  '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
+
+                # Update input.tf file
+                sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
+
+                # Debug: Show input.tf after update
+                echo "input.tf after update:"
+                cat Terraform/input.tf
+
+                # Set flag for update needed
+                echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+
+                # Configure Git
+                git config --global user.name 'github-actions[bot]'
+                git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+                # Create a new branch for the update
+                git checkout -b "update-helm-version-$chart_name"
+
+                # Stage and commit changes
+                git add akash.json Terraform/input.tf
+                git commit -m "Update Helm chart version for $chart_name to $latest_version"
+                git push origin HEAD:"update-helm-version-$chart_name"
+
+                # Extract the commit hash for the push
+                COMMIT_HASH=$(git rev-parse HEAD)
+
+                # Create a pull request using GitHub REST API
+                curl -s -X POST \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/pulls \
+                  -d '{
+                    "title": "Update Helm chart version for '"$chart_name"'",
+                    "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
+                    "head": "update-helm-version-'$chart_name'",
+                    "base": "Test"
+                  }'
+
+                # Reset the repository to the original state
+                git reset --hard origin/Test
+              else
+                echo "No update needed for $chart_name. Current version: $version"
+              fi
             fi
           done
