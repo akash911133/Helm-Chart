@@ -1,9 +1,10 @@
 name: Helm Chart Update Check
+
 on:
   push:
     branches:
       - Test
-      
+
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
   HELM_S3_PLUGIN_VERSION: 'v0.13.0'
@@ -20,8 +21,8 @@ jobs:
 
       - name: Install Helm
         run: |
-          wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
-          tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
+          wget "https://get.helm.sh/helm-${HELM_PACKAGE_VERSION}-linux-amd64.tar.gz"
+          tar -xzvf "helm-${HELM_PACKAGE_VERSION}-linux-amd64.tar.gz"
           sudo mv linux-amd64/helm /usr/local/bin/helm
 
       - name: Install jq
@@ -37,40 +38,20 @@ jobs:
           for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
-            version=$(echo "$chart" | jq -r '.version' )
+            version=$(echo "$chart" | jq -r '.version')
 
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
             echo "Current Version: $version"
 
             # Add Helm repo if not already added
-
-            helm repo add "$chart_name" "$repository"
-
+            helm repo add "$chart_name" "$repository" || true
 
             # Update Helm repo
             helm repo update
 
             # Get the latest version available
             latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-
-            # Compare versions  if first letter is string
-            if $version -eq v$version then 
-                version=$(echo $version | sed 's/v//g')
-                if dpkg --compare-versions "$version" lt "$latest_version"; then
-                    echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
-                    jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
-                    '(.charts[] | select(.chart == $chart_name) | .version) = v$latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
-                    echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
-
-                    # Debug: Show input.tf before update
-                    echo "input.tf before update:"
-                    cat Terraform/input.tf
-
-                    # Update input.tf file
-                    sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'v$latest_version'"/}' Terraform/input.tf
-                fi
-            fi
 
             # Compare versions and update if needed
             if dpkg --compare-versions "$version" lt "$latest_version"; then
