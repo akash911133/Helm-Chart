@@ -36,7 +36,7 @@ jobs:
           for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
-            version=$(echo "$chart" | jq -r '.version')
+            version=$(echo "$chart" | jq -r '.version' | sed 's/^v//')
 
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
@@ -54,10 +54,9 @@ jobs:
             latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
             # Compare versions and update if needed
-
             if dpkg --compare-versions "$version" lt "$latest_version"; then
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
-              jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
+              jq --arg chart_name "$chart_name" --arg latest_version "v$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
