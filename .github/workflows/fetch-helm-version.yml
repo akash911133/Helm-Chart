@@ -55,7 +55,7 @@ jobs:
             latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
 
-            if [[ "$version" == "v$version" ]]; then
+            if [[ "v$version" == "$version" ]]; then
               version=$(echo "$version" | sed 's/v//g')
               if dpkg --compare-versions "$version" lt "$latest_version"; then
                 echo -e "\n\033[34mVersion update needed for $chart_name. Current version: v$version, Latest version: v$latest_version\033[0m\n"
