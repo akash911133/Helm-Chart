@@ -38,40 +38,74 @@ jobs:
           for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
-            version=$(echo "$chart" | jq -r '.version' | sed 's/^v//')
+            version=$(echo "$chart" | jq -r '.version')
 
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
             echo "Current Version: $version"
 
+            # Add Helm repo if not already added
             helm repo add "$chart_name" "$repository" || true
+
+            # Update Helm repo
             helm repo update
 
+            # Get the latest version available
             latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
+
+            if [[ "v$version" == v* ]]; then
+              version=$(echo "$version" | sed 's/v//g')
+              if dpkg --compare-versions "$version" lt "$latest_version"; then
+                echo -e "\n\033[34mVersion update needed for $chart_name. Current version: v$version, Latest version: v$latest_version\033[0m\n"
+                jq --arg chart_name "$chart_name" --arg latest_version "v$latest_version" \
+                '(.charts[] | select(.chart == $chart_name) | .version) = "v$latest_version"' akash.json > akash_updated.json && mv akash_updated.json akash.json
+                echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+                version=$(echo "$version" | sed 's/$latest_version/v$latest_version/g')
+                # Debug: Show input.tf before update
+                echo "input.tf before update:"
+                cat Terraform/input.tf
+
+                # Update input.tf file
+                sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
+              fi
+            fi
+
+
+            # Compare versions and update if needed
             if dpkg --compare-versions "$version" lt "$latest_version"; then
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
-
-              jq --arg chart_name "$chart_name" --arg latest_version "v$latest_version" \
+              jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
               echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
+              # Debug: Show input.tf before update
               echo "input.tf before update:"
               cat Terraform/input.tf
 
+              # Update input.tf file
               sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
 
+              # Debug: Show input.tf after update
               echo "input.tf after update:"
               cat Terraform/input.tf
 
+              # Configure Git
               git config --global user.name 'github-actions[bot]'
               git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
+              # Create a new branch for the update
               git checkout -b "update-helm-version-$chart_name"
+
+              # Stage and commit changes
               git add akash.json Terraform/input.tf
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
               git push origin HEAD:"update-helm-version-$chart_name"
 
+              # Extract the commit hash for the push
+              COMMIT_HASH=$(git rev-parse HEAD)
+
+              # Create a pull request using GitHub REST API
               curl -s -X POST \
                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
@@ -83,6 +117,7 @@ jobs:
                   "base": "Test"
                 }'
 
+              # Reset the repository to the original state
               git reset --hard origin/Test
             else
               echo "No update needed for $chart_name. Current version: $version"
