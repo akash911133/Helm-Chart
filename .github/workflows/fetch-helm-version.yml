@@ -35,6 +35,7 @@ jobs:
           updated=false
 
           for chart in $charts; do
+            updated=false
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
             version=$(echo "$chart" | jq -r '.version')
