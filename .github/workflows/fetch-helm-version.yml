@@ -46,13 +46,7 @@ jobs:
             repository=$(echo "$chart" | jq -r '.repository')
             version=$(echo "$chart" | jq -r '.version')
 
-            if [ "$updated" = true ]; then
-              echo "Skipping update for $chart_name since an update has already been done in this run."
-              continue
-            fi
-
-            if [ "$last_updated_chart" != "none" ] && [ "$chart_name" = "$last_updated_chart" ]; then
-              last_updated_chart="none"
+            if [ "$last_updated_chart" = "$chart_name" ]; then
               continue
             fi
 
@@ -124,3 +118,22 @@ jobs:
               echo "No update needed for $chart_name. Current version: $version"
             fi
           done
+
+      - name: Cleanup Last Updated Chart Tracker
+        if: success()
+        run: |
+          last_updated_chart=$(cat last_updated_chart.txt)
+          charts=$(jq -c '.charts[]' akash.json)
+          all_updated=true
+
+          for chart in $charts; do
+            chart_name=$(echo "$chart" | jq -r '.chart')
+            if [ "$last_updated_chart" != "$chart_name" ]; then
+              all_updated=false
+              break
+            fi
+          done
+
+          if [ "$all_updated" = true ]; then
+            echo "none" > last_updated_chart.txt
+          fi
