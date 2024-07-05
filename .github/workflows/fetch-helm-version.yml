@@ -28,36 +28,15 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install jq -y
 
-      - name: Read last updated chart
-        id: read-last-updated
-        run: |
-          if [ ! -f last_updated_chart.txt ]; then
-            echo "last_updated_chart=null" >> $GITHUB_ENV
-          else
-            last_chart=$(cat last_updated_chart.txt)
-            echo "last_updated_chart=$last_chart" >> $GITHUB_ENV
-          fi
-
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
           charts=$(jq -c '.charts[]' akash.json)
-          last_updated=${{ env.last_updated_chart }}
-          update_started=false
 
           for chart in $charts; do
             chart_name=$(echo "$chart" | jq -r '.chart')
             repository=$(echo "$chart" | jq -r '.repository')
             version=$(echo "$chart" | jq -r '.version')
-
-            if [ "$update_started" = false ]; then
-              if [ "$chart_name" = "$last_updated" ]; then
-                update_started=true
-                continue
-              else
-                continue
-              fi
-            fi
 
             echo "Checking chart: $chart_name"
             echo "Repository: $repository"
@@ -98,12 +77,13 @@ jobs:
               git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
               # Create a new branch for the update
-              git checkout -b "update-helm-version-$chart_name"
+              feature_branch="update-helm-version-$chart_name"
+              git checkout -b "$feature_branch"
 
               # Stage and commit changes
-              git add akash.json Terraform/input.tf last_updated_chart.txt
+              git add akash.json Terraform/input.tf
               git commit -m "Update Helm chart version for $chart_name to $latest_version"
-              git push origin HEAD:"update-helm-version-$chart_name"
+              git push origin HEAD:"$feature_branch"
 
               # Extract the commit hash for the push
               COMMIT_HASH=$(git rev-parse HEAD)
@@ -116,16 +96,9 @@ jobs:
                 -d '{
                   "title": "Update Helm chart version for '"$chart_name"'",
                   "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
-                  "head": "update-helm-version-'$chart_name'",
+                  "head": "'"$feature_branch"'",
                   "base": "Test"
                 }'
-              
-              # Update last updated chart
-              echo "$chart_name" > last_updated_chart.txt
-
-              # Stop after updating the first chart to ensure one change per PR
-              exit 0
-
             else
               echo "No update needed for $chart_name. Current version: $version"
             fi
