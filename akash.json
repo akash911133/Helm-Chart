@@ -18,7 +18,7 @@
     {
       "chart": "aws-efs-csi-driver",
       "repository": "https://kubernetes-sigs.github.io/aws-efs-csi-driver",
-      "version": "2.2.9"
+      "version": "3.0.6"
     },
     {
       "chart": "aws-load-balancer-controller",
