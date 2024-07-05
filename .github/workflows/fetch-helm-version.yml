@@ -46,7 +46,13 @@ jobs:
             repository=$(echo "$chart" | jq -r '.repository')
             version=$(echo "$chart" | jq -r '.version')
 
+            if [ "$updated" = true ]; then
+              echo "Skipping update for $chart_name since an update has already been done in this run."
+              continue
+            fi
+
             if [ "$last_updated_chart" != "none" ] && [ "$chart_name" = "$last_updated_chart" ]; then
+              last_updated_chart="none"
               continue
             fi
 
@@ -68,11 +74,6 @@ jobs:
             # Compare versions and update if needed
             version=$(echo $version | sed 's/v//g')
             if dpkg --compare-versions "$version" lt "$latest_version"; then
-              if [ "$updated" = true ]; then
-                echo "Skipping update for $chart_name since an update has already been done in this run."
-                continue
-              fi
-
               echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
               jq --arg chart_name "$chart_name" --arg latest_version "$latest_version" \
                 '(.charts[] | select(.chart == $chart_name) | .version) = $latest_version' akash.json > akash_updated.json && mv akash_updated.json akash.json
