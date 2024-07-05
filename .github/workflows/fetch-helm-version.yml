@@ -65,7 +65,7 @@ jobs:
               cat Terraform/input.tf
 
               # Update input.tf file
-              sed -i 's/^default = ".*"/default = "v'$latest_version'"/' Terraform/input.tf
+              sed -i '/"'$chart_name'"/{n;s/.*/ default = "'$latest_version'"/}' Terraform/input.tf
 
               # Debug: Show input.tf after update
               echo "input.tf after update:"
@@ -80,7 +80,7 @@ jobs:
 
               # Stage and commit changes
               git add akash.json Terraform/input.tf
-              git commit -m "Update Helm chart version for $chart_name to v$latest_version"
+              git commit -m "Update Helm chart version for $chart_name to $latest_version"
               git push origin HEAD:"update-helm-version-$chart_name"
 
               # Extract the commit hash for the push
@@ -93,7 +93,7 @@ jobs:
                 https://api.github.com/repos/${{ github.repository }}/pulls \
                 -d '{
                   "title": "Update Helm chart version for '"$chart_name"'",
-                  "body": "This PR updates Helm chart '"$chart_name"' version to v'"$latest_version"'.",
+                  "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
                   "head": "update-helm-version-'$chart_name'",
                   "base": "Test"
                 }'
