@@ -27,6 +27,6 @@ variable "datadog-crds" {
 }
 
 variable "datadog" {
- default = "3.1.11"
+ default = "3.67.2"
 }
 
