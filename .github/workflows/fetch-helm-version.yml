@@ -32,7 +32,7 @@ jobs:
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
-          "V-Version=false" >> $GITHUB_ENV
+          echo "V-Version=false" >> $GITHUB_ENV
 
           # Extract charts from JSON
           charts=$(jq -c '.charts[]' akash.json)
