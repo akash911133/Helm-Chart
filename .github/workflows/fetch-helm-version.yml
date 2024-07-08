@@ -32,7 +32,7 @@ jobs:
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
-          echo "::set-env name=V_Version::false"
+          echo echo "V_Version=true" >> $GITHUB_ENV
           # Extract charts from JSON
           charts=$(jq -c '.charts[]' akash.json)
 
@@ -58,7 +58,7 @@ jobs:
               if [[ "$version" == v* ]]; then
                 version=$(echo "$version" | sed 's/v//')
                 latest_version=$(echo "$latest_version" | sed 's/v//')
-                echo "::set-env name=V_Version::true"
+                echo echo "V_Version=true" >> $GITHUB_ENV
               fi
 
               # Compare versions and update if needed
@@ -68,7 +68,7 @@ jobs:
                   echo "${{ env.V_Version }}"
 
                   # Update input.tf file
-                  if [[ "${{ env.V_Version }}" = "true" ]]; then
+                  if [[ "${{ env.V_Version }}" == "true" ]]; then
                     sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
                   else
                     sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
