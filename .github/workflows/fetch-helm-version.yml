@@ -3,9 +3,13 @@ name: Update Helm Charts and Terraform Variables
 on:
   push:
     branches:
-      - main
+      - update-helm
   schedule:
     - cron: '0 0 * * 0' # Run every Sunday at midnight UTC
+
+env:
+  HELM_PACKAGE_VERSION: 'v3.12.0'
+  HELM_S3_PLUGIN_VERSION: 'v0.13.0'
 
 jobs:
   update-charts:
@@ -17,9 +21,10 @@ jobs:
       - name: Install dependencies
         run: |
           # Install Helm
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-          chmod 700 get_helm.sh
-          ./get_helm.sh
+           wget "https://get.helm.sh/helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
+          tar -xzvf "helm-${{ env.HELM_PACKAGE_VERSION }}-linux-amd64.tar.gz"
+          sudo mv linux-amd64/helm /usr/local/bin/helm
+          
           # Install yq for YAML parsing
           sudo apt-get update && sudo apt-get install -y jq
           pip install yq
