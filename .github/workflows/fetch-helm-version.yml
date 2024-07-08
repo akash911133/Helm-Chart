@@ -32,7 +32,7 @@ jobs:
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
-          echo "V_Version=false" >> $GITHUB_ENV
+          echo "::set-env name=V_Version::false"
           # Extract charts from JSON
           charts=$(jq -c '.charts[]' akash.json)
 
@@ -58,7 +58,7 @@ jobs:
               if [[ "$version" == v* ]]; then
                 version=$(echo "$version" | sed 's/v//')
                 latest_version=$(echo "$latest_version" | sed 's/v//')
-                echo "V_Version=true" >> $GITHUB_ENV
+                echo "::set-env name=V_Version::true"
               fi
 
               # Compare versions and update if needed
