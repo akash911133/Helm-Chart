@@ -65,6 +65,7 @@ jobs:
               if dpkg --compare-versions "$version" lt "$latest_version"; then
                   echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
                   echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+                  echo "${{ env.V_Version }}"
 
                   # Update input.tf file
                   if [[ "${{ env.V_Version }}" = "true" ]]; then
