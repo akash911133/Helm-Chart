@@ -67,7 +67,7 @@ jobs:
                   echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
                   # Update input.tf file
-                  if [[ ${{ env.V_Version }} == true ]]; then
+                  if [[ "${{ env.V_Version }}" = "true" ]]; then
                     sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
                   else
                     sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
