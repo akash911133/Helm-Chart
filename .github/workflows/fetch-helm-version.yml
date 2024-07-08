@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - optimized
+  schedule:
+    - cron: "0 0 * * 1"  # Run every Monday at midnight UTC
 
 env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
