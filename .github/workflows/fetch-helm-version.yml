@@ -58,6 +58,7 @@ jobs:
               # Normalize version format (remove 'v' prefix if present)
               if [[ "$chart_name" == v* ]]; then
                 version=$(echo "$version" | sed 's/^v//')
+                latest_version=$(echo "$latest_version" | sed 's/^v//')
                 echo "V-Version=true" >> $GITHUB_ENV
               fi
 
