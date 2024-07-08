@@ -26,8 +26,8 @@ jobs:
           sudo mv linux-amd64/helm /usr/local/bin/helm
           
           # Install yq for YAML parsing
-          sudo apt-get update -y && sudo apt-get install -y python3-pip
-          sudo snap install yq --channel=v3/stable -y
+          sudo apt-get update -y
+          sudo snap install yq  -y
 
       - name: Parse helmchart.yaml and update input.tf
         run: |
