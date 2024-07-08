@@ -71,35 +71,35 @@ jobs:
               echo "input.tf after update:"
               cat Terraform/input.tf
 
-              # Configure Git
-              # git config --global user.name 'github-actions[bot]'
-              # git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+              Configure Git
+              git config --global user.name 'github-actions[bot]'
+              git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-              # # Create a new branch for the update
-              # git checkout -b "update-helm-version-$chart_name"
+              # Create a new branch for the update
+              git checkout -b "update-helm-version-$chart_name"
 
-              # # Stage and commit changes
-              # git add  Terraform/input.tf
-              # git commit -m "Update Helm chart version for $chart_name to $latest_version"
-              # git push origin HEAD:"update-helm-version-$chart_name"
+              # Stage and commit changes
+              git add  Terraform/input.tf
+              git commit -m "Update Helm chart version for $chart_name to $latest_version"
+              git push origin HEAD:"update-helm-version-$chart_name"
 
-              # # Extract the commit hash for the push
-              # COMMIT_HASH=$(git rev-parse HEAD)
+              # Extract the commit hash for the push
+              COMMIT_HASH=$(git rev-parse HEAD)
 
-              # # Create a pull request using GitHub REST API
-              # curl -ss -X POST \
-              #   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              #   -H "Accept: application/vnd.github.v3+json" \
-              #   https://api.github.com/repos/${{ github.repository }}/pulls \
-              #   -d '{
-              #     "title": "Update Helm chart version for '"$chart_name"'",
-              #     "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
-              #     "head": "update-helm-version-'$chart_name'",
-              #     "base": "optimized"
-              #   }'
+              # Create a pull request using GitHub REST API
+              curl -ss -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/${{ github.repository }}/pulls \
+                -d '{
+                  "title": "Update Helm chart version for '"$chart_name"'",
+                  "body": "This PR updates Helm chart '"$chart_name"' version to '"$latest_version"'.",
+                  "head": "update-helm-version-'$chart_name'",
+                  "base": "optimized"
+                }'
 
-              # # Reset the repository to the original state
-              # git reset --hard origin/optimized
+              # Reset the repository to the original state
+              git reset --hard origin/optimized
 
 
               else
