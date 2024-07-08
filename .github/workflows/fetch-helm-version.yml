@@ -52,15 +52,16 @@ jobs:
               # Get the latest version available
               latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
+              # Normalize version format (remove 'v' prefix if present)
+              version=$(echo "$version" | sed 's/^v//')
+
               # Compare versions and update if needed
               if dpkg --compare-versions "$version" lt "$latest_version"; then
                   echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
                   echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
-                  # Update input.tf file (only if version starts with 'v')
-                  if [[ "$version" == v* ]]; then
-                      sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
-                  fi
+                  # Update input.tf file
+                  sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
               else
                   echo "No update needed for $chart_name. Current version: $version"
               fi
