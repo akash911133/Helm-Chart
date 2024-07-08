@@ -65,7 +65,7 @@ jobs:
 
                   # Update input.tf file
                   sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
-
+                  sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
               # # Add 'v' prefix back if original version started with 'v'
               # if [[ ${{ env.V-Version }} == true ]]; then
               #   sed -i '/"'$chart_name'"/{n;s/"'$latest_version'"/"'v$latest_version'"/}' Terraform/input.tf 
