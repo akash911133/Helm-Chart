@@ -9,7 +9,7 @@ env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
   HELM_S3_PLUGIN_VERSION: 'v0.13.0'
   UPDATE_NEEDED: 'false'
-  V_Version: 'false'
+  V-Version: 'false'
 
 jobs:
   helm-check:
@@ -53,7 +53,7 @@ jobs:
               helm repo update
 
               # Get the latest version available
-              latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\\d+\\.\\d+\\.\\d+' | head -n 1)
+              latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
               # Normalize version format (remove 'v' prefix if present)
               if [[ "$version" == v* ]]; then
@@ -64,16 +64,16 @@ jobs:
 
               # Compare versions and update if needed
               if dpkg --compare-versions "$version" lt "$latest_version"; then
-                echo -e "\\n\\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\\033[0m\\n"
-                echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+                  echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
+                  echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
-                # Update input.tf file
-                sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
+                  # Update input.tf file
+                  sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
 
-                # Add 'v' prefix back if original version started with 'v'
-                if [[ ${{ env.V_Version }} == true ]]; then
-                  sed -i '/"'$chart_name'"/{n;s/"'$latest_version'"/"'v$latest_version'"/}' Terraform/input.tf 
-                fi
+              # Add 'v' prefix back if original version started with 'v'
+              if [[ ${{ env.V-Version }}n == true ]]; then
+                sed -i '/"'$chart_name'"/{n;s/"'$latest_version'"/"'v$latest_version'"/}' Terraform/input.tf 
+              fi
 
               # Debug: Show input.tf after update
               echo "input.tf after update:"
