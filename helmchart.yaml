@@ -1,0 +1,17 @@
+charts:
+  - chart: cluster-autoscaler
+    repository: 'https://kubernetes.github.io/autoscaler'
+  - chart: ingress-nginx
+    repository: 'https://kubernetes.github.io/ingress-nginx'
+  - chart: metrics-server
+    repository: 'https://kubernetes-sigs.github.io/metrics-server'
+  - chart: aws-efs-csi-driver
+    repository: 'https://kubernetes-sigs.github.io/aws-efs-csi-driver'
+  - chart: aws-load-balancer-controller
+    repository: 'https://aws.github.io/eks-charts'
+  - chart: cert-manager
+    repository: 'https://charts.jetstack.io'
+  - chart: datadog-crds
+    repository: 'https://helm.datadoghq.com'
+  - chart: datadog
+    repository: 'https://helm.datadoghq.com'
