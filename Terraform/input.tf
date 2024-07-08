@@ -19,7 +19,7 @@ variable "aws-load-balancer-controller" {
 }
 
 variable "cert-manager" {
- default = "v1.10.0"
+ default = "v1.15.1"
 }
 
 variable "datadog-crds" {
