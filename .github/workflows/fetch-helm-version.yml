@@ -31,7 +31,7 @@ jobs:
         id: check-versions
         run: |
           # Extract charts from JSON
-          charts=$(jq -c '.charts[]' akash.json)
+          charts=$(jq -c '.charts[]' sample.json)
 
           for chart in $charts; do
               chart_name=$(echo "$chart" | jq -r '.chart')
