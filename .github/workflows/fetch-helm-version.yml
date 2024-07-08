@@ -54,7 +54,7 @@ jobs:
 
               # Normalize version format (remove 'v' prefix if present)
               if [[ "$chart_name" == v* ]]; then
-                version=$(echo "$version" | sed 's/^v//')
+                version=$(echo "$version" | sed 's/^v//' akash.json)
                 if dpkg --compare-versions "$version" lt "$latest_version"; then
                   echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
                   echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
