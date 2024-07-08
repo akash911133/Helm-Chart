@@ -56,7 +56,7 @@ jobs:
               latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
               # Normalize version format (remove 'v' prefix if present)
-              if [[ "$chart_name" == v* ]]; then
+              if [[ "$version" == v* ]]; then
                 version=$(echo "$version" | sed 's/^v//')
                 latest_version=$(echo "$latest_version" | sed 's/^v//')
                 echo "V-Version=true" >> $GITHUB_ENV
