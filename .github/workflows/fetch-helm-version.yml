@@ -62,7 +62,8 @@ jobs:
 
                   # Add 'v' prefix back if original version started with 'v'
                   if [[ "$chart_name" == v* ]]; then
-                      version="v$version"
+                    # Update input.tf file
+                    sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'v$latest_version'"/}' Terraform/input.tf
                   fi
 
                   # Update input.tf file
