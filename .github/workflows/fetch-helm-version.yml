@@ -60,8 +60,9 @@ jobs:
                   echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
                   # Update input.tf file
                   sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
-                  break
                 fi
+                break
+              fi
 
               # Compare versions and update if needed
               if dpkg --compare-versions "$version" lt "$latest_version"; then
