@@ -25,36 +25,40 @@ jobs:
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
-          # Read the chart information from akash.json
-          charts=$(jq -c '.charts[]' akash.json)
+              # Read the chart information from akash.json
+              charts=$(jq -c '.charts[]' akash.json)
 
-          for chart in $charts; do
-              chart_name=$(echo "$chart" | jq -r '.chart')
-              repository=$(echo "$chart" | jq -r '.repository')
-              version=$(echo "$chart" | jq -r '.version')
+              for chart in $charts; do
+                  chart_name=$(echo "$chart" | jq -r '.chart')
+                  repository=$(echo "$chart" | jq -r '.repository')
+                  version=$(echo "$chart" | jq -r '.version')
 
-              # Add Helm repo if not already added
-              helm repo add "$chart_name" "$repository"
+                  # Add Helm repo if not already added
+                  helm repo add "$chart_name" "$repository"
 
-              # Update Helm repo
-              helm repo update
+                  # Update Helm repo
+                  helm repo update
 
-              # Get the latest version available
-              latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
+                  # Get the latest version available
+                  latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
-              # Remove 'v' prefix if present
-              if [[ "$version" == v* ]]; then
-                  version="${version#v}"
-              fi
+                  # Remove 'v' prefix if present
+                  if [[ "$version" == v* ]]; then
+                      version="${version#v}"
+                  fi
 
-              # Compare versions and update if needed
-              if [[ "$version" < "$latest_version" ]]; then
-                  echo -e "\n\033[34mVersion update needed for $chart_name. Current version: v$version, Latest version: v$latest_version\033[0m\n"
-                  echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+                  # Compare versions and update if needed
+                  if [[ "$version" < "$latest_version" ]]; then
+                      # Add 'v' prefix if not already present
+                      if [[ "$version" != v* ]]; then
+                          version="v$latest_version"
+                      fi
+                      echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: v$latest_version\033[0m\n"
+                      echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
-                  # Update input.tf file
-                  sed -i 's/"'$chart_name'"/"'v$latest_version'"/' Terraform/input.tf
-              else
-                  echo "No update needed for $chart_name. Current version: v$version"
-              fi
-          done
+                      # Update input.tf file
+                      sed -i 's/"'$chart_name'"/"'$version'"/' Terraform/input.tf
+                  else
+                      echo "No update needed for $chart_name. Current version: v$version"
+                  fi
+              done
