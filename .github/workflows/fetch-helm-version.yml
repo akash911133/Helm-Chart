@@ -27,7 +27,7 @@ jobs:
           
           # Install yq for YAML parsing
           sudo apt-get update -y && sudo apt-get install -y python3-pip
-          sudo apt-get install yq -y
+          sudo snap install yq --channel=v3/stable -y
 
       - name: Parse helmchart.yaml and update input.tf
         run: |
