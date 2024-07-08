@@ -9,7 +9,6 @@ env:
   HELM_PACKAGE_VERSION: 'v3.12.0'
   HELM_S3_PLUGIN_VERSION: 'v0.13.0'
   UPDATE_NEEDED: 'false'
-  V-Version: 'false'
 
 jobs:
   helm-check:
@@ -32,8 +31,6 @@ jobs:
       - name: Check and Update Helm chart versions
         id: check-versions
         run: |
-          echo "V-Version=false" >> $GITHUB_ENV
-
           # Extract charts from JSON
           charts=$(jq -c '.charts[]' akash.json)
 
@@ -57,9 +54,8 @@ jobs:
 
               # Normalize version format (remove 'v' prefix if present)
               if [[ "$version" == v* ]]; then
-                version=$(echo "$version" | sed 's/^v//')
-                latest_version=$(echo "$latest_version" | sed 's/^v//')
-                echo "V-Version=true" >> $GITHUB_ENV
+                version=$(echo "$version" | sed 's/v//')
+                latest_version=$(echo "$latest_version" | sed 's/v//')
               fi
 
               # Compare versions and update if needed
@@ -70,10 +66,10 @@ jobs:
                   # Update input.tf file
                   sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
 
-              # Add 'v' prefix back if original version started with 'v'
-              if [[ ${{ env.V-Version }} == true ]]; then
-                sed -i '/"'$chart_name'"/{n;s/"'$latest_version'"/"'v$latest_version'"/}' Terraform/input.tf 
-              fi
+              # # Add 'v' prefix back if original version started with 'v'
+              # if [[ ${{ env.V-Version }} == true ]]; then
+              #   sed -i '/"'$chart_name'"/{n;s/"'$latest_version'"/"'v$latest_version'"/}' Terraform/input.tf 
+              # fi
 
               # Debug: Show input.tf after update
               echo "input.tf after update:"
