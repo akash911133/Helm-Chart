@@ -52,20 +52,21 @@ jobs:
               # Get the latest version available
               latest_version=$(helm search repo "$chart_name/$chart_name" --versions | grep -oP '\d+\.\d+\.\d+' | head -n 1)
 
-
+              # Normalize version format (remove 'v' prefix if present)
+              if [[ "$chart_name" == v* ]]; then
+                version=$(echo "$version" | sed 's/^v//')
+                if dpkg --compare-versions "$version" lt "$latest_version"; then
+                  echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
+                  echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+                  # Update input.tf file
+                  sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
+                  break
+                fi
 
               # Compare versions and update if needed
               if dpkg --compare-versions "$version" lt "$latest_version"; then
-                  # Normalize version format (remove 'v' prefix if present)
-                  version=$(echo "$version" | sed 's/^v//')
                   echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
                   echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
-
-                  # Add 'v' prefix back if original version started with 'v'
-                  if [[ "$chart_name" == v* ]]; then
-                    # Update input.tf file
-                    sed -i '/"'$chart_name'"/{n;s/"'v$version'"/"'v$latest_version'"/}' Terraform/input.tf
-                  fi
 
                   # Update input.tf file
                   sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
