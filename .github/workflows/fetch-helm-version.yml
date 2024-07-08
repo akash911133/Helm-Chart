@@ -60,6 +60,11 @@ jobs:
                   echo -e "\n\033[34mVersion update needed for $chart_name. Current version: $version, Latest version: $latest_version\033[0m\n"
                   echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
 
+                  # Add 'v' prefix back if original version started with 'v'
+                  if [[ "$chart_name" == v* ]]; then
+                      version="v$version"
+                  fi
+
                   # Update input.tf file
                   sed -i '/"'$chart_name'"/{n;s/"'$version'"/"'$latest_version'"/}' Terraform/input.tf
               else
